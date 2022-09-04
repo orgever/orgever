@@ -1,0 +1,41 @@
+#!/bin/bash
+
+PATH=$(dirname "$0"):$PATH
+FORMAT=obsidian
+
+source $HOME/.orgever
+
+rsync -avh --exclude ".git" "$OBSIDIAN_ICLOUD_PATH" "$OBSIDIAN_PATH"
+cd "$OBSIDIAN_PATH"
+
+orgever-move-all
+
+git status --porcelain |
+    while read line
+    do
+	repo=`echo $line | cut -d' ' -f 2 | sed 's/\///g'`
+	st=`echo $line | cut -d' ' -f 1`
+	if [[ $st == "??" ]]
+	then
+	    echo $repo
+	    cd $repo
+	    orgever-create-repo
+	    orgever-commit $FORMAT
+	    cd "$OBSIDIAN_PATH"
+	    git submodule add git@github.com:$GITHUB_ORG/$repo.git
+	    git commit -m "add $repo"
+	fi
+	if [[ $st == "M" ]]
+	then
+	    echo "Modified"
+	    cd $repo
+	    orgever-commit $FORMAT
+	    cd "$OBSIDIAN_PATH"
+	    git add $repo
+	    git commit -m "upd $repo"
+	fi
+    done
+
+git push
+
+rsync -avh --exclude ".git" --delete "$OBSIDIAN_PATH" "$OBSIDIAN_ICLOUD_PATH"

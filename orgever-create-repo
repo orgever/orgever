@@ -1,0 +1,20 @@
+#!/bin/bash
+
+source $HOME/.orgever
+
+PWD=`pwd`
+REPO=`basename "$PWD"`
+
+git init
+git remote add template git@github.com:$GITHUB_ORG/template.git
+git fetch template
+git pull template master
+
+OPTS="{\"name\":\"$REPO\", \"private\":true}"
+curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/orgs/$GITHUB_ORG/repos -d "$OPTS"
+
+git remote add origin git@github.com:$GITHUB_ORG/$REPO.git
+git push --set-upstream origin master
+
+git config user.name $GIT_NAME
+git config user.email $GIT_EMAIL

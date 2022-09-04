@@ -1,0 +1,10 @@
+#!/bin/bash
+
+
+ls | grep ".md$" |
+    while read fn
+    do
+	dn=`uuidgen | tr '[:upper:]' '[:lower:]' | cut -d'-' -f1`
+	mkdir -p $dn
+	mv "$fn" $dn
+    done
